@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JusticeBuddy - chatbot created using OpenAI API</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+      /* Add some custom CSS for the chat-like interface */
+      .chat {
+        background-color: #f0f0f0;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 600px;
+        margin: 20px auto;
+      }
+
+      .chat pre {
+        font-family: monospace;
+        white-space: pre-line;
+        overflow-y: auto;
+        max-height: 300px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #fff;
+      }
+
+      .chat .form-floating {
+        text-align: center;
+      }
+
+      .chat textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">JusticeBuddy</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/home">Home</a>
+            </li>
+          </ul>
+          <form class="d-flex" role="search">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      <h1 class="text-center my-3">Welcome to JusticeBuddy - Let's chat!</h1>
+    </div>
+    <div class="container">
+      <div class="chat" style="background-color: #eff0f1;">
+        <pre id="prompt">
+          you: how are you?
+          JB : I am fine
+        </pre>
+        <div class="form-floating">
+          <textarea class="form-control" placeholder="Leave a comment here" id="typedPrompt" onkeydown="if (event.key === 'Enter') { event.preventDefault(); document.getElementById('submit').click(); }"></textarea>
+          <label for="typedPrompt">Type your response here</label>
+        </div>
+        {% csrf_token %}
+        <button type="button" id="submit" class="btn btn-dark my-3">Submit</button>
+      </div>
+    </div>
+    <script>
+      let csrfmiddlewaretoken = document.querySelector("input[type=hidden]").value;
+      console.log(csrfmiddlewaretoken);
+
+      const fetchData = async (myPrompt) => {
+        let data = new FormData();
+        data.append('prompt', myPrompt);
+        data.append('csrfmiddlewaretoken', csrfmiddlewaretoken);
+
+        let a = await fetch("/api", {
+          method: 'POST',
+          body: data,
+          credentials: 'same-origin',
+        });
+        let r = await a.json();
+        return r;
+      }
+
+      const submit = document.getElementById("submit");
+      const typedPrompt = document.getElementById("typedPrompt");
+
+      submit.addEventListener("click", async () => {
+        let myPrompt = document.getElementById("prompt").innerText + "\nyou: " + typedPrompt.value + "\n JB: ";
+        document.getElementById("prompt").innerText = myPrompt;
+        const response = await fetchData(myPrompt);
+        document.getElementById("prompt").innerText += response["choices"][0].text;
+        typedPrompt.value = "";
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  </body>
+</html>
